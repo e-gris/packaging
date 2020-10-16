@@ -253,13 +253,13 @@ describe 'Pkg::Paths' do
         .to eq('/opt/repository/apt/pool/bionic/puppet6/p/puppet-agent')
 
       expect(Pkg::Paths.apt_package_base_path('ubuntu-18.04-amd64', 'puppet7', 'puppet-agent'))
-        .to eq('/opt/repository/apt/pool/bionic/puppet7/p/puppet-agent')
+        .to eq('/opt/repository/apt/puppet7/pool/bionic/p/puppet-agent')
 
       expect(Pkg::Paths.apt_package_base_path('debian-9-amd64', 'puppet6', 'razor-server'))
         .to eq('/opt/repository/apt/pool/stretch/puppet6/r/razor-server')
 
       expect(Pkg::Paths.apt_package_base_path('debian-9-amd64', 'puppet7', 'puppet-agent'))
-        .to eq('/opt/repository/apt/pool/stretch/puppet7/p/puppet-agent')
+        .to eq('/opt/repository/apt/puppet7/pool/stretch/p/puppet-agent')
     end
     it 'returns the appropriate nonfinal repo path' do
       allow(Pkg::Paths).to receive(:remote_repo_base).and_return('/opt/repository-nightlies/apt')

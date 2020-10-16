@@ -111,8 +111,7 @@ module Pkg::Paths
 
     case package_format
     when 'deb'
-      debian_code_name = Pkg::Platforms.get_attribute(platform_tag, :codename)
-      return File.join(prefix, debian_code_name, apt_repo_name(is_nonfinal))
+      return File.join(prefix, apt_repo_name(is_nonfinal))
     when 'dmg'
       return File.join(prefix, 'mac', repo_name(is_nonfinal))
     when 'msi'
@@ -182,14 +181,18 @@ module Pkg::Paths
     base_path, _ = artifacts_base_path_and_link_path(platform_tag, path_prefix, nonfinal)
     platform, version, architecture = Pkg::Platforms.parse_platform_tag(platform_tag)
     package_format = Pkg::Platforms.package_format_for_tag(platform_tag)
-
+    debian_code_name = Pkg::Platforms.get_attribute(platform_tag, :codename)
+    
     case package_format
     when 'rpm'
       File.join(base_path, platform, version, architecture)
     when 'swix'
       File.join(base_path, version, architecture)
     when 'deb'
-      base_path
+      ### This is the puppet7 version
+      File.join(base_path, debian_code_name)
+      ### TODO Replace the < puppet7 code here
+      ### This used toi be just 'base_path' but we changed it.
     when 'svr4', 'ips'
       File.join(base_path, version)
     when 'dmg'
