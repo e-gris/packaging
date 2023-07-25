@@ -33,9 +33,12 @@ module Pkg::Repo
 
       Dir.chdir(File.join('pkg', local_target)) do
         begin
-          %x(echo ===== DEBUG 1; pwd; ls -laR; echo === DEBUG 1)
-          %x(echo ===== DEBUG 2; pwd; ls -laR repos; echo === DEBUG 2)
-          puts " +++++++++ DEBUG 3 ++++++++++++++++ \n",
+
+          puts "+++++++ DEBUG 1"
+          Pkg::Util::Execution.capture3('pwd', true)
+          Pkg::Util::Execution.capture3('ld -lR', true)
+          ### Use capture3 here for debugging
+          puts " +++++++++ DEBUG 2 ++++++++++++++++ \n",
                "repo_location : #{repo_location} \n",
                "archive_name : #{archive_name} \n",
                "versioning: #{versioning} \n"
