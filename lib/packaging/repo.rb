@@ -36,9 +36,9 @@ module Pkg::Repo
           %x(echo ===== DEBUG 1; pwd; ls -laR; echo === DEBUG 1)
           %x(echo ===== DEBUG 2; pwd; ls -laR repos; echo === DEBUG 2)
           puts " +++++++++ DEBUG 3 ++++++++++++++++ \n",
-               "project: #{project} \n",
-               "platform: #{platform} \n",
-               "repo_tarball_path: #{repo_tarball_path} \n"
+               "repo_location : #{repo_location} \n",
+               "archive_name : #{archive_name} \n",
+               "versioning: #{versioning} \n"
 
 
           puts "\n\n --------- DEBUG --------------------"
