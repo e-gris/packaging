@@ -56,6 +56,22 @@ module Pkg::Repo
       repo_tarball_path = File.join('repos', repo_tarball_name)
 
       Dir.chdir(File.join('pkg', local_target)) do
+        begin
+          %x(echo ===== DEBUG 1; pwd; ls -laR; echo === DEBUG 1)
+          %x(echo ===== DEBUG 2; pwd; ls -laR repos; echo === DEBUG 2)
+          puts " +++++++++ DEBUG 3 ++++++++++++++++ \n",
+               "project: #{project} \n",
+               "platform: #{platform} \n",
+               "repo_tarball_path: #{repo_tarball_path} \n"
+
+
+          puts "\n\n --------- DEBUG --------------------"
+        rescue Errno::ENOENT => e
+          warn " ++++ DEBUG: #{e} "
+        end
+
+
+
         unless Pkg::Util::File.exist?(repo_tarball_path)
           warn "Skipping #{archive_name} because it (#{repo_tarball_path}) contains no files"
           next
@@ -67,7 +83,7 @@ module Pkg::Repo
         tar_command = %W[#{tar} --owner=0 --group=0 #{tar_action}
           --file #{all_repos_tarball_name} #{repo_tarball_path}].join(' ')
 
-        stdout, = Pkg::Util::Execution.capture3(tar_command)
+        stdout, = Pkg::Util::Execution.capture3(tar_command, true)
         puts stdout
       end
     end
