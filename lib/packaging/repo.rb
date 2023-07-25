@@ -32,11 +32,26 @@ module Pkg::Repo
       end
 
       Dir.chdir(File.join('pkg', local_target)) do
+        begin
+          %x(echo ===== DEBUG 1; pwd; ls -laR; echo === DEBUG 1)
+          %x(echo ===== DEBUG 2; pwd; ls -laR repos; echo === DEBUG 2)
+          puts " +++++++++ DEBUG 3 ++++++++++++++++ \n",
+               "project: #{project} \n",
+               "platform: #{platform} \n",
+               "repo_tarball_path: #{repo_tarball_path} \n"
+
+
+          puts "\n\n --------- DEBUG --------------------"
+        rescue Errno::ENOENT => e
+          warn " ++++ DEBUG: #{e} "
+        end
+
+
         puts "Info: Archiving #{repo_location} as #{archive_name}"
         target_tarball = File.join('repos', "#{archive_name}.tar.gz")
         tar_command = %W[#{tar} --owner=0 --group=0 --create --gzip
           --file #{target_tarball} #{repo_location}].join(' ')
-        stdout, = Pkg::Util::Execution.capture3(tar_command)
+        stdout, = Pkg::Util::Execution.capture3(tar_command, true)
         return stdout
       end
     end
@@ -56,20 +71,6 @@ module Pkg::Repo
       repo_tarball_path = File.join('repos', repo_tarball_name)
 
       Dir.chdir(File.join('pkg', local_target)) do
-        begin
-          %x(echo ===== DEBUG 1; pwd; ls -laR; echo === DEBUG 1)
-          %x(echo ===== DEBUG 2; pwd; ls -laR repos; echo === DEBUG 2)
-          puts " +++++++++ DEBUG 3 ++++++++++++++++ \n",
-               "project: #{project} \n",
-               "platform: #{platform} \n",
-               "repo_tarball_path: #{repo_tarball_path} \n"
-
-
-          puts "\n\n --------- DEBUG --------------------"
-        rescue Errno::ENOENT => e
-          warn " ++++ DEBUG: #{e} "
-        end
-
 
 
         unless Pkg::Util::File.exist?(repo_tarball_path)
