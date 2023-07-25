@@ -36,7 +36,7 @@ module Pkg::Repo
 
           puts "+++++++ DEBUG 1"
           Pkg::Util::Execution.capture3('pwd', true)
-          Pkg::Util::Execution.capture3('ld -lR', true)
+          Pkg::Util::Execution.capture3('ls -lR', true)
           ### Use capture3 here for debugging
           puts " +++++++++ DEBUG 2 ++++++++++++++++ \n",
                "repo_location : #{repo_location} \n",
