@@ -274,7 +274,7 @@ namespace :pl do
         end
         puts 'pl:jenkins:uber_ship_lite: dry-run for pl:jenkins:ship.invoke("shipped")'
         puts 'pl:jenkins:uber_ship_lite: dry-run for pl:update_release_metrics'
-        return
+        next
       end
 
       ship_tasks.each do |task|
