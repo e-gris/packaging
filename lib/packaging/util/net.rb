@@ -393,19 +393,19 @@ module Pkg::Util::Net
     def export_packaging_location
       return '' if ENV['PACKAGING_LOCATION'].nil? || ENV['PACKAGING_LOCATION'].empty?
 
-      "export PACKAGING_LOCATION='#{ENV['PACKAGING_LOCATION']}'"
+      "export PACKAGING_LOCATION='#{ENV['PACKAGING_LOCATION']}';"
     end
 
     def export_vanagon_location
       return '' if ENV['VANAGON_LOCATION'].nil? || ENV['VANAGON_LOCATION'].empty?
 
-      "export VANAGON_LOCATION='#{ENV['VANAGON_LOCATION']}'"
+      "export VANAGON_LOCATION='#{ENV['VANAGON_LOCATION']}';"
     end
 
     def export_gem_source
       return '' if ENV['GEM_SOURCE'].nil? || ENV['GEM_SOURCE'].empty?
 
-      "export GEM_SOURCE='#{ENV['GEM_SOURCE']}'"
+      "export GEM_SOURCE='#{ENV['GEM_SOURCE']}';"
     end
 
     def remote_bundle_install_command
@@ -415,9 +415,9 @@ module Pkg::Util::Net
         rvm use ruby-#{rvm_ruby_version};
         set -x;
         bundle config set --local path .bundle/gems;
-        #{export_gem_source};
-        #{export_packaging_location};
-        #{export_vanagon_location};
+        #{export_gem_source}
+        #{export_packaging_location}
+        #{export_vanagon_location}
         bundle install --quiet;
       ].join(' ')
     end
