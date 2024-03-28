@@ -150,6 +150,7 @@ namespace :pl do
       build_params = Pkg::Util::Net.remote_buildparams(Pkg::Config.signing_server, Pkg::Config)
       Pkg::Util::Net.rsync_to(root_dir, Pkg::Config.signing_server, remote_repo)
       rake_command = <<~DOC
+        set -e ;
         set -x ;
         cd #{remote_repo} ;
         #{Pkg::Util::Net.remote_bundle_install_command}
