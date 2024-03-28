@@ -413,7 +413,7 @@ module Pkg::Util::Net
       %W[
         source /usr/local/rvm/scripts/rvm;
         rvm use ruby-#{rvm_ruby_version};
-        set -x
+        set -x;
         bundle config set --local path .bundle/gems;
         #{export_gem_source};
         #{export_packaging_location};
