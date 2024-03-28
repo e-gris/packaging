@@ -152,7 +152,7 @@ namespace :pl do
       rake_command = <<~DOC
         set -e ;
         set -x ;
-        cd #{remote_repo} ;
+        builtin cd #{remote_repo};
         #{Pkg::Util::Net.remote_bundle_install_command}
         bundle exec rake #{sign_tasks.map { |task| task + "[#{root_dir}]" }.join(' ')} PARAMS_FILE=#{build_params}
       DOC
