@@ -389,12 +389,36 @@ module Pkg::Util::Net
       return git_bundle_directory
     end
 
+    def export_packaging_location
+      return '' if ENV['PACKAGING_LOCATION'].nil? || ENV['PACKAGING_LOCATION'].empty?
+
+      "export PACKAGING_LOCATION='#{ENV['PACKAGING_LOCATION']}'"
+    end
+
+    def export_vanagon_location
+      return '' if ENV['VANAGON_LOCATION'].nil? || ENV['VANAGON_LOCATION'].empty?
+
+      "export VANAGON_LOCATION='#{ENV['VANAGON_LOCATION']}'"
+    end
+
+    def export_gem_source
+      return '' if ENV['GEM_SOURCE'].nil? || ENV['GEM_SOURCE'].empty?
+
+      "export GEM_SOURCE='#{ENV['GEM_SOURCE']}'"
+    end
+
     def remote_bundle_install_command
       rvm_ruby_version = ENV['RVM_RUBY_VERSION'] || '3.1.1'
-      export_packaging_location = "export PACKAGING_LOCATION='#{ENV['PACKAGING_LOCATION']}';" if ENV['PACKAGING_LOCATION'] && !ENV['PACKAGING_LOCATION'].empty?
-      export_vanagon_location = "export VANAGON_LOCATION='#{ENV['VANAGON_LOCATION']}';" if ENV['VANAGON_LOCATION'] && !ENV['VANAGON_LOCATION'].empty?
-      export_gem_source = "export GEM_SOURCE='#{ENV['GEM_SOURCE']}';" if ENV['GEM_SOURCE'] && !ENV['GEM_SOURCE'].empty?
-      "source /usr/local/rvm/scripts/rvm; rvm use ruby-#{rvm_ruby_version}; #{export_gem_source} #{export_packaging_location} #{export_vanagon_location} bundle install --path .bundle/gems ;"
+      %W[
+        source /usr/local/rvm/scripts/rvm;
+        rvm use ruby-#{rvm_ruby_version};
+        set -x
+        bundle config set --local path .bundle/gems;
+        #{export_gem_source};
+        #{export_packaging_location};
+        #{export_vanagon_location};
+        bundle install --quiet;
+      ].join(' ')
     end
 
     # Given a BuildInstance object and a host, send its params to the host. Return
