@@ -250,29 +250,49 @@ namespace :pl do
     end
 
     task :uber_ship_lite => "pl:fetch" do
-      tasks = %w[
-        jenkins:retrieve
-        jenkins:sign_all
-        ship_rpms
-        ship_debs
-        ship_dmg
-        ship_swix
-        ship_tar
-        ship_msi
-        ship_gem
+      setup_tasks = %w[
+        pl:jenkins:retrieve
+        pl:jenkins:sign_all
       ]
-      tasks.map { |t| "pl:#{t}" }.each do |t|
-        puts "Not Running \"#{t}\""
-        # Rake::Task[t].invoke
+      ship_tasks = %w[
+        pl:ship_rpms
+        pl:ship_debs
+        pl:ship_dmg
+        pl:ship_swix
+        pl:ship_tar
+        pl:ship_msi
+        pl:ship_gem
+      ]
+
+      setup_tasks.each do |task|
+        Rake::Task[task].invoke
       end
+
+      if ENV['PL_JENKINS_UBER_SHIP_LITE_DRYRUN'].downcase == 'true'
+        ship_tasks.each do |task|
+          puts "pl:jenkins:uber_ship_lite: dry-run for #{task}"
+        end
+        puts 'pl:jenkins:uber_ship_lite: dry-run for pl:jenkins:ship.invoke("shipped")'
+        puts 'pl:jenkins:uber_ship_lite: dry-run for pl:update_release_metrics'
+        return
+      end
+
+      ship_tasks.each do |task|
+        puts "pl:jenkins:uber_ship_lite: invoking #{task}"
+        Rake::Task[task].invoke
+      end
+
       # mark the build as successfully shipped
-      #Rake::Task["pl:jenkins:ship"].invoke("shipped")
-      # add the release to release-metrics
-      #begin
-      #  Rake::Task["pl:update_release_metrics"].invoke
-      #rescue StandardError => e
-      #  fail "Error updating release-metrics:\n#{e}\nYou will need to add this release manually."
-      #end
+      puts 'pl:jenkins:uber_ship_lite: invoking pl:jenkins:ship("shipped")'
+      Rake::Task["pl:jenkins:ship"].invoke("shipped")
+
+      add the release to release-metrics
+      begin
+        puts 'pl:jenkins:uber_ship_lite: invoking pl:update_release_metrics'
+        Rake::Task["pl:update_release_metrics"].invoke
+      rescue StandardError => e
+        fail "Error updating release-metrics:\n#{e}\nYou will need to add this release manually."
+      end
     end
 
     task :stage_nightlies => "pl:fetch" do
