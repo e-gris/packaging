@@ -29,7 +29,7 @@ module Pkg
       #   Return the binding of class context. Used for erb templates.
       #
       def get_binding
-        return binding
+        binding
       end
 
       ##
@@ -40,8 +40,6 @@ module Pkg
         data.each do |param, value|
           if Pkg::Params::BUILD_PARAMS.include?(param.to_sym)
             self.instance_variable_set("@#{param}", value)
-          else
-            warn "Warning - No build data parameter found for '#{param}'. Perhaps you have an erroneous entry in your yaml file?"
           end
         end
       end
@@ -170,13 +168,16 @@ module Pkg
       def add_additional_artifact(platform_data, tag, artifact)
         # Don't add noarch packages to additional_artifacts if the same package
         # is already the artifact
-        if !platform_data[tag][:artifact].nil? && File.basename(platform_data[tag][:artifact]) == File.basename(artifact)
+        if !platform_data[tag][:artifact].nil? &&
+           File.basename(platform_data[tag][:artifact]) == File.basename(artifact)
           return
         end
 
         platform_data[tag][:additional_artifacts] ||= []
 
-        if platform_data[tag][:additional_artifacts].select { |a| File.basename(a) == File.basename(artifact) }.empty?
+        if platform_data[tag][:additional_artifacts].select do |a|
+             File.basename(a) == File.basename(artifact)
+           end.empty?
           platform_data[tag][:additional_artifacts] << artifact
         end
 
@@ -247,31 +248,38 @@ module Pkg
         # Assume that PACKAGING_ROOT has been set, or set the PACKAGING_ROOT to
         # one directory above the LIBDIR
         #
-        defined?(PACKAGING_ROOT) ? File.expand_path(PACKAGING_ROOT) : File.expand_path(File.join(LIBDIR, ".."))
+        if defined?(PACKAGING_ROOT)
+          File.expand_path(PACKAGING_ROOT)
+        else
+          File.expand_path(File.join(LIBDIR, ".."))
+        end
       end
 
       def load_default_configs
         got_config = false
-        default_project_data = { :path => File.join(@project_root, "ext", "project_data.yaml"), :required => false }
-        default_build_defaults = { :path => File.join(@project_root, "ext", "build_defaults.yaml"), :required => true }
+        default_project_data = {
+          path: File.join(@project_root, "ext", "project_data.yaml"), required: false
+        }
+        default_build_defaults = {
+          path: File.join(@project_root, "ext", "build_defaults.yaml"), required: true
+        }
 
         [default_project_data, default_build_defaults].each do |config|
-          if File.readable? config[:path]
-            self.config_from_yaml(config[:path])
-            got_config = true if config[:required]
-          else
+          unless File.readable?(config[:path])
             puts "Skipping load of expected default config #{config[:path]}, cannot read file."
+            next
           end
+
+          self.config_from_yaml(config[:path])
+          got_config = true if config[:required]
         end
 
-        if got_config
-          self.config
-        else
-          # Since the default configuration files are not readable, most
-          # likely not present, at this point we assume the project_root
-          # isn't what we hoped it would be, and unset it.
-          @project_root = nil
-        end
+        return self.config if got_config
+
+        # Since the default configuration files are not readable, most
+        # likely not present, at this point we assume the project_root
+        # isn't what we hoped it would be, and unset it.
+        @project_root = nil
       end
 
       #   Set all aspects of how the package will be versioned. Versioning
@@ -290,18 +298,20 @@ module Pkg
       #   really belongs in the Rpm object.
 
       def load_versioning
-        if @project_root and Pkg::Util::Git.describe
-          @ref         = Pkg::Util::Git.sha_or_tag
-          @short_ref   = Pkg::Util::Git.sha_or_tag(7)
-          @version     = Pkg::Util::Version.dash_version
-          @gemversion  = Pkg::Util::Version.dot_version
-          @debversion  = Pkg::Util::Version.debversion
-          @origversion = Pkg::Util::Version.origversion
-          @rpmversion  = Pkg::Util::Version.rpmversion
-          @rpmrelease  = Pkg::Util::Version.rpmrelease
-        else
-          puts "Skipping determination of version via git describe, Pkg::Config.project_root is not set to the path of a tagged git repo."
+        unless @project_root && Pkg::Util::Git.describe
+          puts "Skipping setting version via git describe becausePkg::Config.project_root " \
+               "is not set to the path of a tagged git repo."
+          return
         end
+
+        @ref = Pkg::Util::Git.sha_or_tag
+        @short_ref = Pkg::Util::Git.sha_or_tag(7)
+        @version = Pkg::Util::Version.dash_version
+        @gemversion = Pkg::Util::Version.dot_version
+        @debversion = Pkg::Util::Version.debversion
+        @origversion = Pkg::Util::Version.origversion
+        @rpmversion = Pkg::Util::Version.rpmversion
+        @rpmrelease = Pkg::Util::Version.rpmrelease
       end
 
       ##
@@ -309,7 +319,6 @@ module Pkg
       #   is via environment variables passed on the command line to a rake task.
       #   These override any existing values of Pkg::Config class instance
       #   variables
-      #
       def load_envvars
         Pkg::Params::ENV_VARS.each do |v|
           if var = ENV[v[:envvar].to_s]
@@ -356,17 +365,18 @@ module Pkg
       #   after overrides.
       #
       def load_overrides
-        if ENV['PARAMS_FILE'] && ENV['PARAMS_FILE'] != ''
-          if File.readable?(ENV['PARAMS_FILE'])
-            project_root = self.instance_variable_get("@project_root")
-            packaging_root = self.instance_variable_get("@packaging_root")
-            self.config_from_yaml(ENV['PARAMS_FILE'])
-            self.instance_variable_set("@project_root", project_root) if project_root
-            self.instance_variable_set("@packaging_root", packaging_root) if packaging_root
-          else
-            fail "PARAMS_FILE was set, but not to the path to a readable file."
-          end
+        params_file = ENV['PARAMS_FILE']
+        return if params_file.nil? || params_file.empty?
+
+        unless File.readable?(params_file)
+          fail 'PARAMS_FILE was set, but not to the path to a readable file.'
         end
+
+        project_root = self.instance_variable_get('@project_root')
+        packaging_root = self.instance_variable_get('@packaging_root')
+        self.config_from_yaml(params_file)
+        self.instance_variable_set("@project_root", project_root) if project_root
+        self.instance_variable_set("@packaging_root", packaging_root) if packaging_root
       end
 
       ##
@@ -418,7 +428,7 @@ module Pkg
           end
         end
 
-        if error_count != 0
+        unless error_count.zero?
           warn "Warning: #{error_count} validation failure(s)."
         end
       end
@@ -471,12 +481,13 @@ module Pkg
       def yum_target_path(feature_branch = false)
         target_path = "#{Pkg::Config.yum_repo_path}/#{Pkg::Config.pe_version}"
         # Target path is different for feature (PEZ) or release branches
+
         if feature_branch || Pkg::Config.pe_feature_branch
-          return "#{target_path}/feature/repos/"
+          "#{target_path}/feature/repos/"
         elsif Pkg::Config.pe_release_branch
-          return "#{target_path}/release/repos/"
+          "#{target_path}/release/repos/"
         else
-          return "#{target_path}/repos/"
+          "#{target_path}/repos/"
         end
       end
 
@@ -484,11 +495,11 @@ module Pkg
         target_path = "#{Pkg::Config.apt_repo_path}/#{Pkg::Config.pe_version}"
         # Target path is different for feature (PEZ) or release branches
         if feature_branch || Pkg::Config.pe_feature_branch
-          return "#{target_path}/feature/repos/"
+          "#{target_path}/feature/repos/"
         elsif Pkg::Config.pe_release_branch
-          return "#{target_path}/release/repos/"
+          "#{target_path}/release/repos/"
         else
-          return "#{target_path}/repos/"
+          "#{target_path}/repos/"
         end
       end
     end

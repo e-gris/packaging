@@ -125,44 +125,43 @@ namespace :pl do
       # extra :jenkins task for signing PE, we determine which sign task to use
       # based on if we're building PE.
       # We also listen in on the environment variable SIGNING_BUNDLE. This is
-      # _NOT_ intended for public use, but rather with the internal promotion
+      # NOT intended for public use, but rather with the internal promotion
       # workflow for Puppet Enterprise. SIGNING_BUNDLE is the path to a tarball
       # containing a git bundle to be used as the environment for the packaging
       # repo in a signing operation.
+      signing_server = Pkg::Config.signing_server
       signing_bundle = ENV['SIGNING_BUNDLE']
-      rpm_sign_task = Pkg::Config.build_pe ? "pe:sign_rpms" : "pl:sign_rpms"
-      deb_sign_task = Pkg::Config.build_pe ? "pe:sign_deb_changes" : "pl:sign_deb_changes"
+      rpm_sign_task = Pkg::Config.build_pe ? 'pe:sign_rpms' : 'pl:sign_rpms'
+      deb_sign_task = Pkg::Config.build_pe ? 'pe:sign_deb_changes' : 'pl:sign_deb_changes'
 
       sign_tasks = [rpm_sign_task]
       sign_tasks << deb_sign_task unless Dir["#{root_dir}/**/*.changes"].empty?
-      sign_tasks << "pl:sign_tar" if Pkg::Config.build_tar
-      sign_tasks << "pl:sign_gem" if Pkg::Config.build_gem
-      ### EXGDEBUG Commented out for testing
-      ## sign_tasks << "pl:sign_osx" if Pkg::Config.build_dmg || Pkg::Config.vanagon_project
-      sign_tasks << "pl:sign_swix" if Pkg::Config.vanagon_project
-      sign_tasks << "pl:sign_svr4" if Pkg::Config.vanagon_project
-      sign_tasks << "pl:sign_ips" if Pkg::Config.vanagon_project
-      sign_tasks << "pl:sign_msi" if Pkg::Config.build_msi || Pkg::Config.vanagon_project
+      sign_tasks << 'pl:sign_tar' if Pkg::Config.build_tar
+      sign_tasks << 'pl:sign_gem' if Pkg::Config.build_gem
+      sign_tasks << "pl:sign_osx" if Pkg::Config.build_dmg || Pkg::Config.vanagon_project
+      sign_tasks << 'pl:sign_swix' if Pkg::Config.vanagon_project
+      sign_tasks << 'pl:sign_svr4' if Pkg::Config.vanagon_project
+      sign_tasks << 'pl:sign_ips' if Pkg::Config.vanagon_project
+      sign_tasks << 'pl:sign_msi' if Pkg::Config.build_msi || Pkg::Config.vanagon_project
+
+      rake_tasks = sign_tasks.map { |task| "#{task}[#{root_dir}]" }.join(' ')
+      build_params = Pkg::Util::Net.remote_buildparams(signing_server, Pkg::Config)
 
       remote_repo = Pkg::Util::Net.remote_unpack_git_bundle(
-        Pkg::Config.signing_server, 'HEAD', nil, signing_bundle
+        signing_server, 'HEAD', nil, signing_bundle
       )
-      build_params = Pkg::Util::Net.remote_buildparams(Pkg::Config.signing_server, Pkg::Config)
-      Pkg::Util::Net.rsync_to(root_dir, Pkg::Config.signing_server, remote_repo)
+
+      Pkg::Util::Net.rsync_to(root_dir, signing_server, remote_repo)
       rake_command = <<~DOC
-        set -e;
         cd #{remote_repo};
         #{Pkg::Util::Net.remote_bundle_install_command}
-        bundle exec rake #{sign_tasks.map { |task| task + "[#{root_dir}]" }.join(' ')} PARAMS_FILE=#{build_params}
+        bundle exec rake #{rake_tasks} PARAMS_FILE=#{build_params}
       DOC
 
-      Pkg::Util::Net.remote_execute(Pkg::Config.signing_server, rake_command)
-      Pkg::Util::Net.rsync_from(
-        "#{remote_repo}/#{root_dir}/",
-        Pkg::Config.signing_server,
-        "#{root_dir}/")
-      Pkg::Util::Net.remote_execute(Pkg::Config.signing_server, "rm -rf #{remote_repo}")
-      Pkg::Util::Net.remote_execute(Pkg::Config.signing_server, "rm #{build_params}")
+      Pkg::Util::Net.remote_execute(signing_server, rake_command)
+      Pkg::Util::Net.rsync_from("#{remote_repo}/#{root_dir}/", signing_server, "#{root_dir}/")
+      Pkg::Util::Net.remote_execute(signing_server, "rm -rf #{remote_repo}")
+      Pkg::Util::Net.remote_execute(signing_server, "rm #{build_params}")
       puts "Signed packages staged in #{root_dir} directory"
     end
   end
