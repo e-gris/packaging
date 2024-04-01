@@ -252,7 +252,6 @@ namespace :pl do
     task :uber_ship_lite => "pl:fetch" do
       setup_tasks = %w[
         pl:jenkins:retrieve
-        pl:jenkins:sign_all
       ]
       ship_tasks = %w[
         pl:ship_rpms
@@ -267,6 +266,8 @@ namespace :pl do
       setup_tasks.each do |task|
         Rake::Task[task].invoke
       end
+
+      ## Everything we retrieved should be signed but it may be useful to verify here.
 
       if ENV['PL_JENKINS_UBER_SHIP_LITE_DRYRUN'].downcase == 'true'
         ship_tasks.each do |task|
