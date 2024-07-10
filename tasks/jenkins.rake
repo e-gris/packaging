@@ -287,7 +287,7 @@ namespace :pl do
       puts 'pl:jenkins:uber_ship_lite: invoking pl:jenkins:ship("shipped")'
       Rake::Task["pl:jenkins:ship"].invoke("shipped")
 
-      add the release to release-metrics
+      # add the release to release-metrics
       begin
         puts 'pl:jenkins:uber_ship_lite: invoking pl:update_release_metrics'
         Rake::Task["pl:update_release_metrics"].invoke
