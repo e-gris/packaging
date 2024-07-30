@@ -218,13 +218,18 @@ module Pkg::Util::Net
 
     def s3sync_to(source, target_bucket, target_directory = "", flags = [])
       s3cmd = Pkg::Util::Tool.check_tool('s3cmd')
+      s3config = File.join(ENV['HOME'], '.s3cfg')
 
-      if Pkg::Util::File.file_exists?(File.join(ENV['HOME'], '.s3cfg'))
-        stdout, = Pkg::Util::Execution.capture3("#{s3cmd} sync #{flags.join(' ')} '#{source}' s3://#{target_bucket}/#{target_directory}/")
-        stdout
-      else
-        fail "#{File.join(ENV['HOME'], '.s3cfg')} does not exist. It is required to ship files using s3cmd."
+      unless File.exist?(s3config)
+        fail "#{s3config} does not exist. It is required to ship files using s3cmd."
       end
+
+      s3cmd_options = flags.join(' ')
+      destination = "s3://#{target_bucket}/#{target_directory}/"
+      sync_command = "#{s3cmd} sync #{s3cmd_options} '#{source}' #{destination}"
+
+      stdout, = Pkg::Util::Execution.capture3(sync_command, true)
+      stdout
     end
 
     # This is fairly absurd. We're implementing curl by shelling out. What do I

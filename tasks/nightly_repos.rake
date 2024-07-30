@@ -184,8 +184,16 @@ namespace :pl do
       target_bucket = args.target_bucket or fail ":target_bucket is a required argument to #{t}"
 
       # Ship it to the target for consumption
-      # First we ship the latest and clean up any repo-configs that are no longer valid with --delete-removed and --acl-public
-      Pkg::Util::Net.s3sync_to("pkg/#{Pkg::Config.project}-latest/", target_bucket, "#{Pkg::Config.project}-latest", ["--acl-public", "--delete-removed", "--follow-symlinks"])
+
+      # First we ship the latest and clean up any repo-configs that
+      # are no longer valid with --delete-removed and --acl-public
+
+      Pkg::Util::Net.s3sync_to(
+        "pkg/#{Pkg::Config.project}-latest/",
+        target_bucket,
+        "#{Pkg::Config.project}-latest",
+        ["--acl-public", "--delete-removed", "--follow-symlinks"]
+      )
       # Then we ship the sha version with just --acl-public
       Pkg::Util::Net.s3sync_to("pkg/#{Pkg::Config.project}/", target_bucket, Pkg::Config.project, ["--acl-public", "--follow-symlinks"])
 
