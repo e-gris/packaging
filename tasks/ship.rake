@@ -249,7 +249,7 @@ namespace :pl do
 
     ##
     ## S3 syncing
-    S3_REPO_SYNC = 'sudo /usr/local/bin/s3_repo_sync.sh'
+    S3_REPO_SYNC = 'sudo /usr/local/bin/s3_repo_sync'
 
     desc "Sync signed apt repos from #{Pkg::Config.apt_signing_server} to S3"
     task :deploy_apt_repo_to_s3 => 'pl:fetch' do
@@ -307,15 +307,18 @@ namespace :pl do
     desc "Sync yum and apt from #{Pkg::Config.staging_server} to rsync servers"
     task :deploy_to_rsync_server => 'pl:fetch' do
       # This task must run after the S3 sync has run, or else /opt/repo-s3-stage won't be up-to-date
-      puts "Really run rsync to sync apt and yum from #{Pkg::Config.staging_server} to rsync servers? Only say yes if the S3 sync task has run. [y,n]"
-      if Pkg::Util.ask_yes_or_no
-        Pkg::Util::Execution.retry_on_fail(:times => 3) do
-          Pkg::Config.rsync_servers.each do |rsync_server|
-            ['apt', 'yum'].each do |repo|
-              # Don't --delete so that folks using archived packages can continue to do so
-              command = "sudo su - rsync --command 'rsync --verbose -a --exclude '*.html' /opt/repo-s3-stage/repositories/#{repo}.puppetlabs.com/ rsync@#{rsync_server}:/opt/repository/#{repo}'"
-              Pkg::Util::Net.remote_execute(Pkg::Config.staging_server, command)
-            end
+      puts "Run rsync to sync apt and yum from #{Pkg::Config.staging_server} " \
+           "to rsync servers? [y,n]"
+      next unless Pkg::Util.ask_yes_or_no
+      Pkg::Util::Execution.retry_on_fail(times: 3) do
+        Pkg::Config.rsync_servers.each do |rsync_server|
+          ['apt', 'yum'].each do |repo|
+            # Don't --delete so that folks using archived packages can continue to do so
+            source = "/opt/repo-s3-stage/repositories/#{repo}.puppetlabs.com/"
+            destination = "rsync@#{rsync_server}:/opt/repository/#{repo}"
+            rsync_subcommand = "rsync --verbose --archive --exclude '*.html' #{source} #{destination}"
+            command = "sudo su - rsync --command '#{rsync_subcommand}'"
+            Pkg::Util::Net.remote_execute(Pkg::Config.staging_server, command)
           end
         end
       end
