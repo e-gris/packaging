@@ -201,16 +201,22 @@ namespace :pl do
 
     desc "Move MSI repos from #{Pkg::Config.msi_staging_server} to #{Pkg::Config.msi_host}"
     task deploy_msi_repo: 'pl:fetch' do
-      puts "Really run remote rsync to deploy source MSIs from #{Pkg::Config.msi_staging_server} to #{Pkg::Config.msi_host}? [y,n]"
+      msi_staging_server = Pkg::Config.msi_staging_server
+      msi_host = Pkg::Config.msi_host
+      puts "Really run remote rsync to deploy source MSIs from #{msi_staging_server} to #{msi_host}? [y,n]"
       if Pkg::Util.ask_yes_or_no
         files = Dir.glob('pkg/windows/**/*.msi')
         if files.empty?
           puts 'There are no MSIs to ship'
-        else
-          Pkg::Util::Execution.retry_on_fail(times: 3) do
-            cmd = Pkg::Util::Net.rsync_cmd(Pkg::Config.msi_path, target_host: Pkg::Config.msi_host, extra_flags: ['--update'])
-            Pkg::Util::Net.remote_execute(Pkg::Config.msi_staging_server, cmd)
-          end
+          next
+        end
+
+        Pkg::Util::Execution.retry_on_fail(times: 3) do
+          cmd = Pkg::Util::Net.rsync_cmd(
+            Pkg::Config.msi_path,
+            target_host: msi_host,
+            extra_flags: ['--update'])
+          Pkg::Util::Net.remote_execute(msi_staging_server, cmd)
         end
       end
     end
@@ -310,6 +316,7 @@ namespace :pl do
       puts "Run rsync to sync apt and yum from #{Pkg::Config.staging_server} " \
            "to rsync servers? [y,n]"
       next unless Pkg::Util.ask_yes_or_no
+
       Pkg::Util::Execution.retry_on_fail(times: 3) do
         Pkg::Config.rsync_servers.each do |rsync_server|
           ['apt', 'yum'].each do |repo|
