@@ -66,7 +66,6 @@ CONFIGURATION_KEYS = %i[
   gpg_key
   gpg_name
   homepage
-  ips_build_host
   ips_host
   ips_inter_cert
   ips_package_host

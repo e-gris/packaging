@@ -4,6 +4,9 @@ This changelog adheres to [Keep a CHANGELOG](http://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Removed
+- (RE-16325) Remove support for IPS signing.
+
 ## [0.122.0] - 2024-09-03
 ### Added
 - (PA-6326) Add Windows FIPS 2016 (x64) to platform packaging hash.

@@ -83,17 +83,12 @@ module Pkg::Params
                   gpg_name
                   homepage
                   internal_gem_host
-                  ips_build_host
                   ips_host
                   ips_inter_cert
                   ips_package_host
                   ips_path
                   ips_repo
                   ips_root_cert
-                  ips_signing_cert
-                  ips_signing_key
-                  ips_signing_server
-                  ips_signing_ssh_key
                   ips_store
                   jenkins_build_host
                   jenkins_packaging_job
@@ -236,10 +231,6 @@ module Pkg::Params
               { :var => :ips_path,                :envvar => :IPS_PATH },
               { :var => :ips_repo,                :envvar => :IPS_REPO },
               { :var => :ips_root_cert,           :envvar => :IPS_ROOT_CERT },
-              { :var => :ips_signing_cert,        :envvar => :IPS_SIGNING_CERT },
-              { :var => :ips_signing_key,         :envvar => :IPS_SIGNING_KEY },
-              { :var => :ips_signing_server,      :envvar => :IPS_SIGNING_SERVER },
-              { :var => :ips_signing_ssh_key,     :envvar => :IPS_SIGNING_SSH_KEY },
               { :var => :msi_host,                :envvar => :MSI_HOST },
               { :var => :msi_path,                :envvar => :MSI_PATH },
               { :var => :msi_signing_gcp_service_account_credentials, :envvar => :MSI_SIGNING_GCP_SERVICE_ACCOUNT_CREDENTIALS },
@@ -316,10 +307,6 @@ module Pkg::Params
               { :var => :osx_signing_cert,        :val => '$OSX_SIGNING_CERT' },
               { :var => :osx_signing_keychain,    :val => '$OSX_SIGNING_KEYCHAIN' },
               { :var => :osx_signing_keychain_pw, :val => '$OSX_SIGNING_KEYCHAIN_PW' },
-              { :var => :ips_signing_cert,        :val => '$IPS_SIGNING_CERT' },
-              { :var => :ips_inter_cert,          :val => '$IPS_INTER_CERT' },
-              { :var => :ips_root_cert,           :val => '$IPS_ROOT_CERT' },
-              { :var => :ips_signing_key,         :val => '$IPS_SIGNING_KEY' },
               { :var => :pe_feature_branch,       :val => false },
               { :var => :pe_release_branch,       :val => false },
               { :var => :s3_ship,                 :val => false },
