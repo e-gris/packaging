@@ -385,7 +385,7 @@ module Pkg::Util::Net
         #{tar} -zxvf /tmp/#{tarball_name}.tar.gz -C /tmp/ ;
         git clone --recursive /tmp/#{tarball_name} #{git_bundle_directory} ;
       DOC
-      Pkg::Util::Net.remote_execute(host, command)
+      Pkg::Util::Net.remote_execute(host, command, { trace: true })
       return git_bundle_directory
     end
 
