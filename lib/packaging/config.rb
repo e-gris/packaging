@@ -326,9 +326,6 @@ module Pkg
             self.instance_variable_set("@#{v[:var]}", var)
           end
         end
-
-        ### EXGDEBUG
-        warn ">>>>>>>>>>>>>>>>>>>>>>>> Config.ref: #{Pkg::Config.ref}"
       end
 
       ##
